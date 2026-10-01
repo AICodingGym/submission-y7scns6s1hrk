@@ -243,6 +243,10 @@ class Collector:
             for field in relation.field.foreign_related_fields:
                 if not field.primary_key and field.name not in fields:
                     fields.append(field.name)
+        if not related_model._meta.auto_created and (
+                signals.pre_delete.has_listeners(related_model) or
+                signals.post_delete.has_listeners(related_model)):
+            fields = [field.name for field in related_model._meta.concrete_fields]
         return related.related_model._base_manager.using(self.using).filter(
             **{"%s__in" % related.field.name: objs}
         ).only(*fields)
